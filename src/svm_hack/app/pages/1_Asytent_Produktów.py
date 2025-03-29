@@ -1,9 +1,5 @@
-import numpy as np
-import plotly.graph_objects as go
 import streamlit as st
-from openai import OpenAI
-from svm_hack.app.utils import st_dtypes
-from svm_hack.app.models import cfg
+
 from svm_hack.app.llms import ProductAssistant
 
 
