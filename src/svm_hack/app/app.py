@@ -20,6 +20,10 @@ UserInfo = namedtuple(
 )
 
 
+def mock_tool_result():
+    return "Crypto: 100k, Obligacje 50k"
+
+
 def input_form() -> UserInfo:
     """Zebranie danych od użytkownika"""
     left_col, right_col = st.columns(2)
