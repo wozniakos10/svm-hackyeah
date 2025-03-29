@@ -14,11 +14,14 @@ class StreamlitEnum(Enum):
 
 @unique
 class AgeBox(StreamlitEnum):
-    YOUNG = '20-25 lat'
-    MIDDLE_AGE = '26-35 lat'
-    OLDER = '36-50 lat'
+    YOUNG = '18-24 lata'
+    MIDDLE_AGE = '25-34 lata'
+    OLDER = '35-50 lat'
+    SENIOR = 'powyżej 50 lat'
 
 
 @unique
 class HorizonttBox(StreamlitEnum):
-    SHORT = 'krótkoterminowy'
+    SHORT = 'krótkoterminowy (do 2 lat)'
+    MEDIUM = 'średnioterminowy (do 5 lat)'
+    LONG = 'długoterminowy (do 20 lat)'
