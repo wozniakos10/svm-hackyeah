@@ -1,0 +1,25 @@
+[project]
+name = "svm-hack"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "wozniakos10", email = "wozniakos10@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+svm-hack = "svm_hack:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+    "pytest>=8.3.5",
+    "pytest-dotenv>=0.5.2",
+    "ruff>=0.11.2",
+]
