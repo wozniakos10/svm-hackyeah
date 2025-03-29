@@ -1,12 +1,19 @@
-MONTHLY_RATE = 500
-YEARS = 5
+from svm_hack.app.models import product_database
 
-# Zestawy stóp procentowych dla różnych poziomów ryzyka
-risk_profiles = {
-    "Ryzyko małe": [0.05, 0.00, 0.10],
-    "Ryzyko średnie": [-0.05, 0.00, 0.13],
-    "Ryzyko duże": [-0.20, 0.00, 0.18],
-}
+
+def get_products_info(products):
+    """
+    :param products: Lista produktów od czata
+    :return: Lista obiektow juz do plotowania
+    """
+    d = {}
+    for product in products:
+        if product_database.find_by_type(product):
+            d[product_database.find_by_type(product)[0].name] = (
+                product_database.find_by_type(product)[0].parameters.min_return,
+                product_database.find_by_type(product)[0].parameters.max_return,
+            )
+    return d
 
 
 def calculate_smooth_compound_interest(years, monthly_payment, annual_interest_rate):
@@ -32,11 +39,3 @@ def calculate_smooth_compound_interest(years, monthly_payment, annual_interest_r
         value_over_time.append(total)  # Wartość inwestycji po kapitalizacji
 
     return timeline, value_over_time
-
-
-X = int(
-    calculate_smooth_compound_interest(
-        YEARS, MONTHLY_RATE, risk_profiles["Ryzyko małe"][0]
-    )[1][-1]
-)
-print(X)

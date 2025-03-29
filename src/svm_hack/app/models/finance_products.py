@@ -42,6 +42,7 @@ class FinancialProduct(BaseModel):
         schema_extra = {
             "example": {
                 "name": "Obligacje Skarbowe",
+                "id"
                 "type": "obligacja",
                 "risk": "niskie",
                 "description": "Dłużne papiery wartościowe emitowane przez Skarb Państwa.",
