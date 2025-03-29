@@ -7,7 +7,6 @@ from svm_hack.app.models import cfg
 from svm_hack.app.llm import create_completion, create_completion_for_tool_call
 from svm_hack.app.schema import UserForm
 
-
 UserInfo = namedtuple(
     "UserInfo",
     [
@@ -76,13 +75,13 @@ def input_form() -> UserInfo:
         selected_reaction_to_loss = st.selectbox(
             "Jak byś zareagował(a), gdyby Twoja inwestycja straciła 20% wartości w krótkim czasie?",
             st_dtypes.ReactionBox.values(),
-          
-    selected_revenues = st.number_input(
-        "Jakie masz przychody? (miesięcznie)", min_value=0, step=100, value=5000
-    )
-    selected_expenses = st.number_input(
-        "Jakie masz wydatki? (miesięcznie)", min_value=0, step=100, value=2500
-    )
+        )
+        selected_revenues=st.number_input(
+            "Jakie masz przychody? (miesięcznie)", min_value=0, step=100, value=5000
+        )
+        selected_expenses = st.number_input(
+            "Jakie masz wydatki? (miesięcznie)", min_value=0, step=100, value=2500
+        )
 
     return UserInfo(
         age=user_avg_age,
@@ -92,7 +91,7 @@ def input_form() -> UserInfo:
         invest_percent=selected_invest_percent,
         reaction_to_loss=selected_reaction_to_loss,
     )
-          
+
 
 def main() -> None:
     st.set_page_config(
@@ -146,7 +145,6 @@ def main() -> None:
     # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
     # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
 
-
     # Create a session state variable to store the chat messages. This ensures that the
     # messages persist across reruns.
     if "messages" not in st.session_state:
@@ -156,7 +154,6 @@ def main() -> None:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-          
 
     # Create a chat input field to allow the user to enter a message. This will display
     # automatically at the bottom of the page.
@@ -165,7 +162,6 @@ def main() -> None:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
-
 
         # Stream the response to the chat using `st.write_stream`, then store it in
         # # session state.
@@ -177,10 +173,10 @@ def main() -> None:
             st.chat_message("assistant").write(response.tool_calls)
             # tu kurwa dawid
             tool_result = mock_tool_result(response.tool_calls)
-            tool_message = {                               # append result message
+            tool_message = {  # append result message
                 "role": "tool",
                 "tool_call_id": response.tool_calls[0].id,
-                "content": str(tool_result) 
+                "content": str(tool_result)
             }
             st.session_state.messages.append(tool_message)
 
