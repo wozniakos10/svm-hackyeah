@@ -1,10 +1,11 @@
 from collections import namedtuple
 
 import streamlit as st
-from openai import OpenAI
 
 from svm_hack.app.utils import st_dtypes
 from svm_hack.app.models import cfg
+from svm_hack.app.llm import create_completion, create_completion_for_tool_call
+from svm_hack.app.schema import UserForm
 
 
 UserInfo = namedtuple(
@@ -43,6 +44,10 @@ def input_form() -> UserInfo:
         case _:
             raise ValueError("Incorrect age bucket selected")
 
+    selected_time = st.selectbox(
+        "W jakim horyzoncie czasowym chcesz zainwestować?",
+        st_dtypes.TimeHorizonBox.values(),
+    )
     match selected_time:
         case st_dtypes.TimeHorizonBox.SHORT:
             investment_time = 2  # in years (could be changed to months)
@@ -71,6 +76,19 @@ def input_form() -> UserInfo:
         selected_reaction_to_loss = st.selectbox(
             "Jak byś zareagował(a), gdyby Twoja inwestycja straciła 20% wartości w krótkim czasie?",
             st_dtypes.ReactionBox.values(),
+          
+    selected_revenues = st.number_input(
+        "Jakie masz przychody? (miesięcznie)", min_value=0, step=100, value=5000
+    )
+    selected_expenses = st.number_input(
+        "Jakie masz wydatki? (miesięcznie)", min_value=0, step=100, value=2500
+    )
+
+    if selected_expenses > selected_revenues:
+        st.write("ty sie skup na oszczedzaniu, a nie na inwestowaniu")
+    else:
+        suggested_investment = (1 - avg_age / 100) * (
+            selected_revenues - selected_expenses
         )
 
     return UserInfo(
@@ -81,7 +99,7 @@ def input_form() -> UserInfo:
         invest_percent=selected_invest_percent,
         reaction_to_loss=selected_reaction_to_loss,
     )
-
+          
 
 def main() -> None:
     st.set_page_config(
@@ -135,8 +153,6 @@ def main() -> None:
     # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
     # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=cfg.OPENAI_API_KEY)
 
     # Create a session state variable to store the chat messages. This ensures that the
     # messages persist across reruns.
@@ -147,6 +163,7 @@ def main() -> None:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+          
 
     # Create a chat input field to allow the user to enter a message. This will display
     # automatically at the bottom of the page.
@@ -156,21 +173,29 @@ def main() -> None:
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
 
         # Stream the response to the chat using `st.write_stream`, then store it in
-        # session state.
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        # # session state.
+        # with st.chat_message("assistant"):
+        #     response = st.write_stream(create_completion(user_info, st.session_state.messages))
+
+        response = create_completion(user_info, st.session_state.messages)
+        if response.tool_calls:
+            st.chat_message("assistant").write(response.tool_calls)
+            # tu kurwa dawid
+            tool_result = mock_tool_result(response.tool_calls)
+            tool_message = {                               # append result message
+                "role": "tool",
+                "tool_call_id": response.tool_calls[0].id,
+                "content": str(tool_result) 
+            }
+            st.session_state.messages.append(tool_message)
+
+            response = create_completion_for_tool_call(user_info, st.session_state.messages)
+            st.session_state.messages.append({"role": "assistant", "content": response.content})
+        else:
+            st.chat_message("assistant").write(response.content)
+            st.session_state.messages.append({"role": "assistant", "content": response.content})
 
 
 if __name__ == "__main__":
