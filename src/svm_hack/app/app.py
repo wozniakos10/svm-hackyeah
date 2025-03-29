@@ -1,31 +1,49 @@
-import numpy as np
-import plotly.graph_objects as go
+from collections import namedtuple
+
 import streamlit as st
 from openai import OpenAI
+
 from svm_hack.app.utils import st_dtypes
 from svm_hack.app.models import cfg
 
 
+UserInfo = namedtuple(
+    "UserInfo",
+    [
+        "age",
+        "time_horizon",
+        "revenues",
+        "expenses",
+        "invest_percent",
+        "reaction_to_loss",
+    ],
+)
 
-def main() -> None:
-    st.title("Asystent oszczędzania")
 
-    st.header("Wprowadź input")
-    selected_age_bucket = st.selectbox("Ile masz lat?", st_dtypes.AgeBox.values())
+def input_form() -> UserInfo:
+    """Zebranie danych od użytkownika"""
+    left_col, right_col = st.columns(2)
+    with left_col:
+        selected_age_bucket = st.selectbox("Ile masz lat?", st_dtypes.AgeBox.values())
+    with right_col:
+        selected_time = st.selectbox(
+            "W jakim horyzoncie czasowym chcesz zainwestować?",
+            st_dtypes.TimeHorizonBox.values(),
+        )
+
     match selected_age_bucket:
         case st_dtypes.AgeBox.YOUNG:
-            avg_age = 21
+            user_avg_age = 21
         case st_dtypes.AgeBox.MIDDLE_AGE:
-            avg_age = 32
+            user_avg_age = 32
         case st_dtypes.AgeBox.OLDER:
-            avg_age = 45
+            user_avg_age = 45
         case st_dtypes.AgeBox.SENIOR:
-            avg_age = 70
+            user_avg_age = 70
         case _:
-            raise ValueError('Incorrect age bucket selected')
+            raise ValueError("Incorrect age bucket selected")
 
-    selection_time = st.selectbox("W jakim horyzoncie czasowym chcesz zainwestować?", st_dtypes.TimeHorizonBox.values())
-    match selection_time:
+    match selected_time:
         case st_dtypes.TimeHorizonBox.SHORT:
             investment_time = 2  # in years (could be changed to months)
         case st_dtypes.TimeHorizonBox.MEDIUM:
@@ -33,24 +51,80 @@ def main() -> None:
         case st_dtypes.TimeHorizonBox.LONG:
             investment_time = 20
         case _:
-            raise ValueError('Incorrect investment time horizon selected')
+            raise ValueError("Incorrect investment time horizon selected")
 
-    selected_revenues = st.number_input("Jakie masz przychody? (miesięcznie)", min_value=0, step=100, value=5000)
-    selected_expenses = st.number_input("Jakie masz wydatki? (miesięcznie)", min_value=0, step=100, value=2500)
+    with left_col:
+        selected_revenues = st.number_input(
+            "Jakie masz przychody? (miesięcznie)", min_value=0, step=100, value=5000
+        )
+    with right_col:
+        selected_expenses = st.number_input(
+            "Jakie masz wydatki? (miesięcznie)", min_value=0, step=100, value=2500
+        )
 
-    if selected_expenses > selected_revenues:
-        st.write('ty sie skup na oszczedzaniu, a nie na inwestowaniu')
-    else:
-        suggested_investment = (1 - avg_age/100)  * (selected_revenues - selected_expenses)
+    with left_col:
+        selected_invest_percent = st.selectbox(
+            "Jaki procent swoich miesięcznych dochodów możesz przeznaczyć na inwestycje, nie martwiąc się o bieżące wydatki?",
+            st_dtypes.PercentMoneyBox.values(),
+        )
+    with right_col:
+        selected_reaction_to_loss = st.selectbox(
+            "Jak byś zareagował(a), gdyby Twoja inwestycja straciła 20% wartości w krótkim czasie?",
+            st_dtypes.ReactionBox.values(),
+        )
 
-        st.write(f'Sugerowany plan inwestycyjny to: {suggested_investment:.2f} zł miesięcznie')
+    return UserInfo(
+        age=user_avg_age,
+        time_horizon=investment_time,
+        revenues=selected_revenues,
+        expenses=selected_expenses,
+        invest_percent=selected_invest_percent,
+        reaction_to_loss=selected_reaction_to_loss,
+    )
 
+
+def main() -> None:
+    st.set_page_config(
+        page_title="InvestMate",
+        page_icon="📈",
+        layout="wide",
+    )
+    st.title("👨‍🦰 InvestMate")
+    st.write("Moim zadaniem jest stanie się Twoim personalnym doradcą inwestycyjnym.")
+    st.write(
+        "Wypełnij formularz, a ja postaram się pomóc Ci ułożyć swój pierwszy plan inwestycyjny 😊"
+    )
+
+    st.header("📊 Powiedz mi coś o sobie!")
+    user_info = input_form()
 
     # Button to run
-    run_button = st.button("Run")
+    run_button = st.button(
+        "Zaczynam inwestować...",
+        help="Naciśnij, aby obliczyć sugerowany plan inwestycyjny",
+    )
+    print(run_button)
+
+    budget = user_info.revenues - user_info.expenses
+    if budget <= 0:
+        st.write("💀 ty sie skup na oszczedzaniu, a nie na inwestowaniu")
+    else:
+        suggested_investment = (1 - user_info.age / 100) * budget
+        budget_perc = suggested_investment / budget * 100
+        st.write(
+            f"Sugerowany plan inwestycyjny to: {suggested_investment:.2f} zł miesięcznie ({budget_perc:.1f}% budżetu)"
+        )
+        selected_investment = st.slider(
+            "Jaką część tej kwoty chcesz przeznaczyć na inwestycje?",
+            value=suggested_investment,
+            min_value=round(suggested_investment * 0.7, 0),
+            max_value=round(suggested_investment * 1.5, 0),
+            step=1.0,
+        )
+        print(selected_investment)
 
     # Show title and description.
-    st.title("💬 Chatbot")
+    st.header("💬 Czy masz jeszcze jakieś pytania?")
     st.write(
         "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
         "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
@@ -60,7 +134,6 @@ def main() -> None:
     # Ask user for their OpenAI API key via `st.text_input`.
     # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
     # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-
 
     # Create an OpenAI client.
     client = OpenAI(api_key=cfg.OPENAI_API_KEY)
