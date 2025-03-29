@@ -78,7 +78,7 @@ def input_form() -> UserInfo:
             "Jak byś zareagował(a), gdyby Twoja inwestycja straciła 20% wartości w krótkim czasie?",
             st_dtypes.ReactionBox.values(),
         )
-        selected_revenues=st.number_input(
+        selected_revenues = st.number_input(
             "Jakie masz przychody? (miesięcznie)", min_value=0, step=100, value=5000
         )
         selected_expenses = st.number_input(
@@ -178,15 +178,21 @@ def main() -> None:
             tool_message = {  # append result message
                 "role": "tool",
                 "tool_call_id": response.tool_calls[0].id,
-                "content": str(tool_result)
+                "content": str(tool_result),
             }
             st.session_state.messages.append(tool_message)
 
-            response = create_completion_for_tool_call(user_info, st.session_state.messages)
-            st.session_state.messages.append({"role": "assistant", "content": response.content})
+            response = create_completion_for_tool_call(
+                user_info, st.session_state.messages
+            )
+            st.session_state.messages.append(
+                {"role": "assistant", "content": response.content}
+            )
         else:
             st.chat_message("assistant").write(response.content)
-            st.session_state.messages.append({"role": "assistant", "content": response.content})
+            st.session_state.messages.append(
+                {"role": "assistant", "content": response.content}
+            )
 
 
 if __name__ == "__main__":
