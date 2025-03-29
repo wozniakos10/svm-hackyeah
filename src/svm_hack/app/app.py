@@ -84,13 +84,6 @@ def input_form() -> UserInfo:
         "Jakie masz wydatki? (miesięcznie)", min_value=0, step=100, value=2500
     )
 
-    if selected_expenses > selected_revenues:
-        st.write("ty sie skup na oszczedzaniu, a nie na inwestowaniu")
-    else:
-        suggested_investment = (1 - avg_age / 100) * (
-            selected_revenues - selected_expenses
-        )
-
     return UserInfo(
         age=user_avg_age,
         time_horizon=investment_time,
