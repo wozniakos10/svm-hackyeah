@@ -25,3 +25,17 @@ class TimeHorizonBox(StreamlitEnum):
     SHORT = "krótkoterminowy (do 2 lat)"
     MEDIUM = "średnioterminowy (do 5 lat)"
     LONG = "długoterminowy (do 20 lat)"
+
+
+@unique
+class PercentMoneyBox(StreamlitEnum):
+    LOW = "<10%"
+    MED = "10-30%"
+    HIGH = ">30%"
+
+
+@unique
+class ReactionBox(StreamlitEnum):
+    LOW = "Sprzedałbym wszystko, żeby uniknąć dalszych strat"
+    MED = "Poczekałbym, ale z niepokojem"
+    HIGH = "Dokupiłbym więcej, widząc okazję"
