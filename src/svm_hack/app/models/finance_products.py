@@ -107,7 +107,7 @@ product_database.add_product(
         type=ProductType.STOCK,
         risk=RiskLevel.HIGH,
         description="Akcje to udziały w spółkach notowanych na giełdach papierów wartościowych. Inwestowanie w akcje pozwala na udział w zyskach firm, zarówno przez wzrost wartości akcji, jak i dywidendy. Charakteryzują się wysoką zmiennością i płynnością, co umożliwia szybki handel. Inwestycja w akcje wiąże się z ryzykiem, ponieważ ich wartość może się zmieniać w zależności od wyników spółek i warunków rynkowych. Zalecana minimalna inwestycja to około 1000 zł.",
-        parameters=ProductParameters(min_return=-0.2, max_return=0.2),
+        parameters=ProductParameters(min_return=-0.2, max_return=0.25),
     )
 )
 
@@ -128,7 +128,7 @@ product_database.add_product(
         type=ProductType.REAL_ESTATE,
         risk=RiskLevel.LOW,
         description="Nieruchomości to jedna z najbezpieczniejszych form inwestycji, charakteryzująca się stabilnym wzrostem wartości w długim okresie. Inwestowanie w nieruchomości może obejmować zakup mieszkań, domów, lokali użytkowych czy gruntów, zarówno w celach mieszkaniowych, jak i komercyjnych. Dzięki niskiemu poziomowi ryzyka i potencjalnym dochodom pasywnym z wynajmu, jest to atrakcyjna opcja dla inwestorów poszukujących stabilności i ochrony kapitału przed inflacją.",
-        parameters=ProductParameters(min_return=0.0, max_return=0.1),
+        parameters=ProductParameters(min_return=-0.05, max_return=0.14),
     )
 )
 
@@ -148,7 +148,7 @@ product_database.add_product(
         type=ProductType.ETF,
         risk=RiskLevel.MEDIUM,
         description="ETF (Exchange Traded Fund) to fundusz inwestycyjny notowany na giełdzie, który umożliwia inwestorom łatwy dostęp do zdywersyfikowanego portfela aktywów. ETF-y mogą obejmować akcje, obligacje, surowce lub inne instrumenty finansowe, śledząc określone indeksy lub strategie inwestycyjne. Dzięki swojej strukturze oferują niższe koszty zarządzania w porównaniu do tradycyjnych funduszy inwestycyjnych oraz możliwość kupna i sprzedaży jednostek w czasie rzeczywistym na giełdzie. Są atrakcyjnym rozwiązaniem dla inwestorów poszukujących równowagi między ryzykiem a potencjalnym zwrotem.",
-        parameters=ProductParameters(min_return=0.00, max_return=0.1),
+        parameters=ProductParameters(min_return=0.02, max_return=0.1),
     )
 )
 
@@ -158,6 +158,6 @@ product_database.add_product(
         type=ProductType.IKE,  # Możesz użyć IKE jako reprezentacji obu typów
         risk=RiskLevel.LOW,
         description="IKE (Indywidualne Konto Emerytalne) oraz IKZE (Indywidualne Konto Zabezpieczenia Emerytalnego) to produkty do oszczędzania na emeryturę z korzyściami podatkowymi. IKE umożliwia zwolnienie z podatku od zysków kapitałowych, natomiast IKZE pozwala na odliczenie wpłat od podstawy opodatkowania. Oba produkty oferują inwestycje w lokaty, fundusze, obligacje czy akcje, stanowiąc bezpieczne rozwiązanie dla osób planujących przyszłość finansową.",
-        parameters=ProductParameters(min_return=0.05, max_return=0.1),
+        parameters=ProductParameters(min_return=0.04, max_return=0.11),
     )
 )

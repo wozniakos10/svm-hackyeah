@@ -7,9 +7,12 @@ from plotly.subplots import make_subplots
 
 def plot_strategy(product: dict, MONTHLY_RATE, YEARS):
 
-
     risk_profiles = {
         key: [item[0], 0, item[1]] for key, item in product.items()
+    }
+
+    possible_values_json =  {
+        key: {} for key in product.keys()
     }
 
     # Kolory wspólne dla wszystkich wykresów
@@ -34,7 +37,14 @@ def plot_strategy(product: dict, MONTHLY_RATE, YEARS):
         _, y_pessimistic = calculate_smooth_compound_interest(
             YEARS, MONTHLY_RATE, pessimistic
         )
+        _, y_neutral = calculate_smooth_compound_interest(
+            YEARS, MONTHLY_RATE, neutral
+        )
 
+        possible_values_json[title]["maksymalny zwrot"] = y_pessimistic[-1]
+        possible_values_json[title]["minimalny zwrot"] = y_optimistic[-1]
+        possible_values_json[title]["standardowy zwrot"] = y_neutral[-1]
+        
         # Szare tło między optimistic i pessimistic
         fig.add_trace(
             go.Scatter(
@@ -90,7 +100,7 @@ def plot_strategy(product: dict, MONTHLY_RATE, YEARS):
 
     # Layout
     fig.update_layout(
-        title=f"Procent składany przy miesięcznej wpłacie {MONTHLY_RATE} zł",
+        title=f"Procent składany przy miesięcznej wpłacie {MONTHLY_RATE:.2f} zł",
         template="plotly_white",
         height=600,  # większe wykresy
         width=3000,  # szersze wykresy
@@ -121,3 +131,5 @@ def plot_strategy(product: dict, MONTHLY_RATE, YEARS):
     # Wyświetlenie w Streamlit
     st.title("Porównanie ryzyk inwestycyjnych – 3 scenariusze")
     st.plotly_chart(fig, use_container_width=True)
+
+    return possible_values_json

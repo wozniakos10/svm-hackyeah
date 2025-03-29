@@ -22,8 +22,8 @@ class AgeBox(StreamlitEnum):
 
 @unique
 class TimeHorizonBox(StreamlitEnum):
-    SHORT = "krótkoterminowy (do 2 lat)"
-    MEDIUM = "średnioterminowy (do 5 lat)"
+    SHORT = "krótkoterminowy (do 5 lat)"
+    MEDIUM = "średnioterminowy (do 10 lat)"
     LONG = "długoterminowy (do 20 lat)"
 
 

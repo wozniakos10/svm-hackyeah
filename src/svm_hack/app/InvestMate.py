@@ -5,18 +5,7 @@ import json
 from svm_hack.app.utils import st_dtypes
 from svm_hack.app.llm import create_completion, create_completion_for_tool_call
 from svm_hack.app.plotting import get_products_info, plot_strategy
-
-UserInfo = namedtuple(
-    "UserInfo",
-    [
-        "age",
-        "time_horizon",
-        "revenues",
-        "expenses",
-        "invest_percent",
-        "reaction_to_loss",
-    ],
-)
+from svm_hack.app.schema import UserInfo
 
 
 def input_form() -> UserInfo:
@@ -87,7 +76,10 @@ def main() -> None:
         page_title="InvestMate",
         page_icon="📈",
         layout="wide",
+        initial_sidebar_state="expanded",
+        menu_items=None
     )
+
     st.title("👨‍🦰 InvestMate")
     st.write("Moim zadaniem jest stanie się Twoim personalnym doradcą inwestycyjnym.")
     st.write(
@@ -98,11 +90,6 @@ def main() -> None:
     user_info = input_form()
 
     # Button to run
-    run_button = st.button(
-        "Zaczynam inwestować...",
-        help="Naciśnij, aby obliczyć sugerowany plan inwestycyjny",
-    )
-    print(run_button)
 
     budget = user_info.revenues - user_info.expenses
     if budget <= 0:
@@ -110,7 +97,7 @@ def main() -> None:
     else:
         suggested_investment = (1 - user_info.age / 100) * budget
         budget_perc = suggested_investment / budget * 100
-        st.write(
+        st.header(
             f"Sugerowany plan inwestycyjny to: {suggested_investment:.2f} zł miesięcznie ({budget_perc:.1f}% budżetu)"
         )
         selected_investment = st.slider(
@@ -123,12 +110,12 @@ def main() -> None:
         print(selected_investment)
 
     # Show title and description.
-    st.header("💬 Czy masz jeszcze jakieś pytania?")
-    st.write(
-        "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-        "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-        "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
-    )
+    st.header("💬 W czym mogę pomóc?")
+    # st.write(
+    #     "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
+    #     "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
+    #     "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
+    # )
 
     # Ask user for their OpenAI API key via `st.text_input`.
     # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
@@ -138,16 +125,19 @@ def main() -> None:
     # messages persist across reruns.
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    if "visible_messages" not in st.session_state:
+        st.session_state.visible_messages = []
 
     # Display the existing chat messages via `st.chat_message`.
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    for visible_message in st.session_state.visible_messages:
+        with st.chat_message(visible_message["role"]):
+            st.markdown(visible_message["content"])
 
     # Create a chat input field to allow the user to enter a message. This will display
     # automatically at the bottom of the page.
     if prompt := st.chat_input("What is up?"):
         # Store and display the current prompt.
+        st.session_state.visible_messages.append({"role": "user", "content": prompt})
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -160,7 +150,8 @@ def main() -> None:
         response = create_completion(user_info, st.session_state.messages)
 
         if response.tool_calls:
-            st.chat_message("assistant").write(response.tool_calls)
+            # st.chat_message("assistant").write(response)
+            st.session_state.messages.append({"role": "assistant", "tool_calls": response.tool_calls})
             # PLOTOWANIE STRATEGII
             product_types = json.loads(response.tool_calls[0].function.arguments).get(
                 "investing_strategies"
@@ -169,26 +160,24 @@ def main() -> None:
             print(f"Product types: {product_types}")
             print("-" * 30)
             products_dict = get_products_info(product_types)
-            plot_strategy(products_dict, selected_investment, user_info.time_horizon)
+            possible_values_json = plot_strategy(products_dict, selected_investment, user_info.time_horizon)
 
             tool_message = {  # append result message
                 "role": "tool",
                 "tool_call_id": response.tool_calls[0].id,
-                "content": "dupa",
+                "content": json.dumps(possible_values_json),
             }
             st.session_state.messages.append(tool_message)
 
-            response = create_completion_for_tool_call(
-                user_info, st.session_state.messages
-            )
-            st.session_state.messages.append(
-                {"role": "assistant", "content": response.content}
-            )
+            with st.chat_message("assistant"):
+                response = st.write_stream(create_completion_for_tool_call(user_info, st.session_state.messages))
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            st.session_state.visible_messages.append({"role": "assistant", "content": response})
+
         else:
             st.chat_message("assistant").write(response.content)
-            st.session_state.messages.append(
-                {"role": "assistant", "content": response.content}
-            )
+            st.session_state.messages.append({"role": "assistant", "content": response.content})
+            st.session_state.visible_messages.append({"role": "assistant", "content": response.content})
 
 
 if __name__ == "__main__":
