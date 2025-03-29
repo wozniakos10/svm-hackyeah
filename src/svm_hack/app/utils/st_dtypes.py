@@ -9,7 +9,7 @@ class StreamlitEnum(Enum):
 
     @classmethod
     def values(cls) -> list:
-        return [s.value for s in cls]
+        return [s for s in cls]
 
 
 @unique
@@ -21,7 +21,7 @@ class AgeBox(StreamlitEnum):
 
 
 @unique
-class HorizonttBox(StreamlitEnum):
+class TimeHorizonBox(StreamlitEnum):
     SHORT = 'krótkoterminowy (do 2 lat)'
     MEDIUM = 'średnioterminowy (do 5 lat)'
     LONG = 'długoterminowy (do 20 lat)'

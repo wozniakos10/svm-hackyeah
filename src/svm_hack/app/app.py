@@ -24,26 +24,26 @@ def main() -> None:
         case _:
             raise ValueError('Incorrect age bucket selected')
 
-    selection_time = st.selectbox("W jakim horyzoncie czasowym chcesz zainwestować?", st_dtypes.HorizonttBox.values())
+    selection_time = st.selectbox("W jakim horyzoncie czasowym chcesz zainwestować?", st_dtypes.TimeHorizonBox.values())
     match selection_time:
-        case st_dtypes.HorizonttBox.SHORT:
+        case st_dtypes.TimeHorizonBox.SHORT:
             investment_time = 2  # in years (could be changed to months)
-        case st_dtypes.HorizonttBox.MIDDLE:
+        case st_dtypes.TimeHorizonBox.MEDIUM:
             investment_time = 5
-        case st_dtypes.HorizonttBox.LONG:
+        case st_dtypes.TimeHorizonBox.LONG:
             investment_time = 20
         case _:
             raise ValueError('Incorrect investment time horizon selected')
 
-    selected_revenues = st.number_input("Jakie masz przychody? (miesięcznie)", min_value=0, step=100)
-    selected_expenses = st.number_input("Jakie masz wydatki? (miesięcznie)", min_value=0, step=100)
+    selected_revenues = st.number_input("Jakie masz przychody? (miesięcznie)", min_value=0, step=100, value=5000)
+    selected_expenses = st.number_input("Jakie masz wydatki? (miesięcznie)", min_value=0, step=100, value=2500)
 
     if selected_expenses > selected_revenues:
         st.write('ty sie skup na oszczedzaniu, a nie na inwestowaniu')
     else:
-        suggested_investment = (100 - avg_age) * (selected_revenues - selected_expenses)
+        suggested_investment = (1 - avg_age/100)  * (selected_revenues - selected_expenses)
 
-        st.write(f'Sugerowany plan inwestycyjny to: {suggested_investment} zł miesięcznie')
+        st.write(f'Sugerowany plan inwestycyjny to: {suggested_investment:.2f} zł miesięcznie')
 
 
     # Button to run
