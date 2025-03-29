@@ -9,7 +9,7 @@ on:
     # Allows manual triggering of the workflow
 
 env:
-  PYTHON_VERSION: '3.13'
+  PYTHON_VERSION: '3.12'
 
 jobs:
   pre-commit-checks:
