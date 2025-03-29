@@ -5,7 +5,6 @@ import streamlit as st
 from svm_hack.app.utils import st_dtypes
 from svm_hack.app.models import cfg
 from svm_hack.app.llm import create_completion, create_completion_for_tool_call
-from svm_hack.app.schema import UserForm
 
 UserInfo = namedtuple(
     "UserInfo",
