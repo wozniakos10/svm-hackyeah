@@ -1,10 +1,14 @@
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
-from openai import OpenAI
 from svm_hack.app.utils import st_dtypes
 from svm_hack.app.models import cfg
+from svm_hack.app.llm import create_completion, create_completion_for_tool_call
+from svm_hack.app.schema import UserForm
 
+
+def mock_tool_result():
+    return "Crypto: 100k, Obligacje 50k"
 
 def main() -> None:
     st.title("Asystent oszczędzania")
@@ -51,9 +55,15 @@ def main() -> None:
             selected_revenues - selected_expenses
         )
 
-        st.write(
-            f"Sugerowany plan inwestycyjny to: {suggested_investment:.2f} zł miesięcznie"
-        )
+        st.write(f'Sugerowany plan inwestycyjny to: {suggested_investment:.2f} zł miesięcznie')
+
+    user_form = UserForm(
+        name="Mateusz",
+        age=selected_age_bucket,
+        initial_capital=str(1000),
+        desired_strategy="Zarabianie na kryptowalutach",
+        investing_timeline=selection_time
+    )
 
     # Button to run
     run_button = st.button("Run")
@@ -70,8 +80,7 @@ def main() -> None:
     # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
     # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=cfg.OPENAI_API_KEY)
+
 
     # Create a session state variable to store the chat messages. This ensures that the
     # messages persist across reruns.
@@ -91,21 +100,29 @@ def main() -> None:
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
 
         # Stream the response to the chat using `st.write_stream`, then store it in
-        # session state.
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        # # session state.
+        # with st.chat_message("assistant"):
+        #     response = st.write_stream(create_completion(user_form, st.session_state.messages))
+
+        response = create_completion(user_form, st.session_state.messages)
+        if response.tool_calls:
+            st.chat_message("assistant").write(response.tool_calls)
+            # tu kurwa dawid
+            tool_result = mock_tool_result(response.tool_calls)
+            tool_message = {                               # append result message
+                "role": "tool",
+                "tool_call_id": response.tool_calls[0].id,
+                "content": str(tool_result) 
+            }
+            st.session_state.messages.append(tool_message)
+
+            response = create_completion_for_tool_call(user_form, st.session_state.messages)
+            st.session_state.messages.append({"role": "assistant", "content": response.content})
+        else:
+            st.chat_message("assistant").write(response.content)
+            st.session_state.messages.append({"role": "assistant", "content": response.content})
 
 
 if __name__ == "__main__":
