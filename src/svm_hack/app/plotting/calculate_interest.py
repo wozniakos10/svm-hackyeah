@@ -9,7 +9,7 @@ def get_products_info(products):
     d = {}
     for product in products:
         if product_database.find_by_type(product):
-            d[product_datbase.find_by_type(product)[0].name] = (
+            d[product_database.find_by_type(product)[0].name] = (
                 product_database.find_by_type(product)[0].parameters.min_return,
                 product_database.find_by_type(product)[0].parameters.max_return,
             )

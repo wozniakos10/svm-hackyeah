@@ -6,11 +6,9 @@ from svm_hack.app.utils import st_dtypes
 from svm_hack.app.models import cfg
 from svm_hack.app.llm import create_completion, create_completion_for_tool_call
 from svm_hack.app.schema import UserForm
+from svm_hack.app.plotting import get_products_info, plot_strategy
 
-
-def mock_tool_result():
-    return "Crypto: 100k, Obligacje 50k"
-
+st.set_page_config(layout="wide")
 def main() -> None:
     st.title("Asystent oszczędzania")
 
@@ -108,21 +106,21 @@ def main() -> None:
         #     response = st.write_stream(create_completion(user_form, st.session_state.messages))
 
         response = create_completion(user_form, st.session_state.messages)
-        print('dupa')
+
+
+
         if response.tool_calls:
             st.chat_message("assistant").write(response.tool_calls)
-            # tu kurwa dawid
-            print(json.loads(response.tool_calls[0].function.arguments).get("investing_strategies"))
-            # product_types = json.loads(response.tool_calls[0].function.arguments).get("investing_strategies")
-            product_types =["kryptowaluta","etf","akcja"]
-            product_dict = {"Akcje": [0.1, 0.5]}
+            # PLOTOWANIE STRATEGII
+            product_types = json.loads(response.tool_calls[0].function.arguments).get("investing_strategies")
+            print("-"*30)
+            print(f"Product types: {product_types}")
+            print("-" * 30)
+            products_dict = get_products_info(product_types)
+            MONTHLY_RATE = 500
+            YEARS = 5
+            plot_strategy(products_dict, MONTHLY_RATE, YEARS)
 
-
-
-
-
-
-            # plot(json.loads(response.tool_calls[0].function.arguments).get("investing_strategies"))
 
 
             tool_message = {                               # append result message
