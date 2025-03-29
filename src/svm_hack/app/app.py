@@ -1,11 +1,10 @@
 from collections import namedtuple
 
 import streamlit as st
-from openai import OpenAI
-
+import json
 from svm_hack.app.utils import st_dtypes
-from svm_hack.app.models import cfg
-
+from svm_hack.app.llm import create_completion, create_completion_for_tool_call
+from svm_hack.app.plotting import get_products_info, plot_strategy
 
 UserInfo = namedtuple(
     "UserInfo",
@@ -45,9 +44,9 @@ def input_form() -> UserInfo:
 
     match selected_time:
         case st_dtypes.TimeHorizonBox.SHORT:
-            investment_time = 2  # in years (could be changed to months)
+            investment_time = 5  # in years (could be changed to months)
         case st_dtypes.TimeHorizonBox.MEDIUM:
-            investment_time = 5
+            investment_time = 10
         case st_dtypes.TimeHorizonBox.LONG:
             investment_time = 20
         case _:
@@ -107,7 +106,7 @@ def main() -> None:
 
     budget = user_info.revenues - user_info.expenses
     if budget <= 0:
-        st.write("💀 ty sie skup na oszczedzaniu, a nie na inwestowaniu")
+        raise ValueError("💀 ty sie skup na oszczedzaniu, a nie na inwestowaniu")
     else:
         suggested_investment = (1 - user_info.age / 100) * budget
         budget_perc = suggested_investment / budget * 100
@@ -135,9 +134,6 @@ def main() -> None:
     # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
     # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=cfg.OPENAI_API_KEY)
-
     # Create a session state variable to store the chat messages. This ensures that the
     # messages persist across reruns.
     if "messages" not in st.session_state:
@@ -156,21 +152,43 @@ def main() -> None:
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
-
         # Stream the response to the chat using `st.write_stream`, then store it in
-        # session state.
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        # # session state.
+        # with st.chat_message("assistant"):
+        #     response = st.write_stream(create_completion(user_form, st.session_state.messages))
+
+        response = create_completion(user_info, st.session_state.messages)
+
+        if response.tool_calls:
+            st.chat_message("assistant").write(response.tool_calls)
+            # PLOTOWANIE STRATEGII
+            product_types = json.loads(response.tool_calls[0].function.arguments).get(
+                "investing_strategies"
+            )
+            print("-" * 30)
+            print(f"Product types: {product_types}")
+            print("-" * 30)
+            products_dict = get_products_info(product_types)
+            plot_strategy(products_dict, selected_investment, user_info.time_horizon)
+
+            tool_message = {  # append result message
+                "role": "tool",
+                "tool_call_id": response.tool_calls[0].id,
+                "content": "dupa",
+            }
+            st.session_state.messages.append(tool_message)
+
+            response = create_completion_for_tool_call(
+                user_info, st.session_state.messages
+            )
+            st.session_state.messages.append(
+                {"role": "assistant", "content": response.content}
+            )
+        else:
+            st.chat_message("assistant").write(response.content)
+            st.session_state.messages.append(
+                {"role": "assistant", "content": response.content}
+            )
 
 
 if __name__ == "__main__":
