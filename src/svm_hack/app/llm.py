@@ -18,7 +18,7 @@ def tools_schema() -> str:
                     "description": "List of investing strategies. Always 3 of them",
                     "items": {
                         "type": "string",
-                        "enum": ["etf", "crypto", "etf_sp500", "investment_account"]
+                        "enum": ["ike", "etf", "kryptowaluta", "nieruchomość", "depozyt", "akcja"]
                     }
                 }
             },

@@ -1,6 +1,7 @@
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
+import json
 from svm_hack.app.utils import st_dtypes
 from svm_hack.app.models import cfg
 from svm_hack.app.llm import create_completion, create_completion_for_tool_call
@@ -107,14 +108,27 @@ def main() -> None:
         #     response = st.write_stream(create_completion(user_form, st.session_state.messages))
 
         response = create_completion(user_form, st.session_state.messages)
+        print('dupa')
         if response.tool_calls:
             st.chat_message("assistant").write(response.tool_calls)
             # tu kurwa dawid
-            tool_result = mock_tool_result(response.tool_calls)
+            print(json.loads(response.tool_calls[0].function.arguments).get("investing_strategies"))
+            # product_types = json.loads(response.tool_calls[0].function.arguments).get("investing_strategies")
+            product_types =["kryptowaluta","etf","akcja"]
+            product_dict = {"Akcje": [0.1, 0.5]}
+
+
+
+
+
+
+            # plot(json.loads(response.tool_calls[0].function.arguments).get("investing_strategies"))
+
+
             tool_message = {                               # append result message
                 "role": "tool",
                 "tool_call_id": response.tool_calls[0].id,
-                "content": str(tool_result) 
+                "content": "dupa"
             }
             st.session_state.messages.append(tool_message)
 
